@@ -1,0 +1,65 @@
+openapi: 3.0.0
+info:
+  title: Commit Payroll API
+  version: 1.0.0
+  description: Commit payroll from HR (internally uses Accounts module)
+
+servers:
+  - url: http://localhost/HR/public/pr
+
+paths:
+ /:
+    post:
+      summary: Commit payroll data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                voucher_date:
+                  type: string
+                  format: date
+                voucher_type:
+                  type: integer
+                region:
+                  type: string
+                doc_id:
+                  type: string
+                voucher_no:
+                  type: string
+                voucher_amount:
+                  type: number
+                status:
+                  type: integer
+                remark:
+                  type: string
+                author:
+                  type: integer
+                created:
+                  type: string
+                  format: date-time
+                modified:
+                  type: string
+                  format: date-time
+              required:
+                - voucher_date
+                - voucher_type
+                - region
+                - doc_id
+                - voucher_no
+                - voucher_amount
+                - status
+                - remark
+                - author
+                - created
+                - modified
+      responses:
+        '200':
+          description: Payroll committed successfully
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error   ]
+           

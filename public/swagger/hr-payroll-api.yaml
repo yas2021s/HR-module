@@ -1,0 +1,22 @@
+openapi: 3.0.0
+info:
+  title: HR Payroll API
+  version: 1.0.0
+paths:
+  /api/payroll/commit:
+    post:
+      summary: Commit payroll
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                year:
+                  type: integer
+                month:
+                  type: integer
+      responses:
+        '200':
+          description: Payroll committed

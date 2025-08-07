@@ -1,0 +1,81 @@
+openapi: 3.0.0
+info:
+  title: Commit Payroll API
+  version: 1.0.0
+  description: Commit payroll from HR (internally uses Accounts module)
+
+servers:
+  - url: http://localhost/HR/public/pr
+
+paths:
+  /commitpayroll:
+    post:
+      summary: Commit payroll to accounts
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                voucher_date:
+                  type: string
+                  format: date
+                  example: '2023-10-01'
+                voucher_type:
+                  type: integer
+                  example: 1
+                region:
+                  type: string
+                  example: 'Region A'
+                doc_id:
+                  type: string
+                  example: 'DOC12345'
+                voucher_no:
+                  type: string
+                  example: 'VOUCHER001'
+                voucher_amount:
+                  type: number
+                  example: 1000.00
+                status:
+                  type: integer
+                  example: 1
+                remark:
+                  type: string
+                  example: 'Monthly payroll for October'
+                author:
+                  type: integer
+                created:
+                  type: string
+                  format: date-time
+                modified:
+                  type: string
+                  format: date-time
+              required:
+                - voucher_date
+                - voucher_type
+                - region
+                - doc_id
+                - voucher_no
+                - voucher_amount
+                - status
+                - remark
+                - author
+                - created
+                - modified
+      responses:
+        '200':
+          description: Payroll committed successfully
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: BhutanPostSession
