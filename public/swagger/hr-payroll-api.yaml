@@ -1,11 +1,182 @@
 openapi: 3.0.0
 info:
   title: HR Payroll API
+  description: Comprehensive API documentation for HR Payroll Management System
   version: 1.0.0
+  contact:
+    name: HR Development Team
+    email: hr@company.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+  - url: https://api.company.com
+    description: Production server
+
+tags:
+  - name: Payroll Management
+    description: Core payroll operations
+  - name: Pay Structure
+    description: Pay structure and payhead management
+  - name: Employee Payroll
+    description: Employee-specific payroll operations
+  - name: Salary Booking
+    description: Salary booking and advance salary operations
+  - name: PEPF
+    description: Public Enterprise Provident Fund operations
+  - name: PBVI
+    description: Payroll Bank Voucher Issue operations
+
 paths:
-  /api/payroll/commit:
+  /payroll:
+    get:
+      tags:
+        - Payroll Management
+      summary: Get payroll overview
+      description: Retrieve payroll overview for a specific year
+      parameters:
+        - name: year
+          in: query
+          description: Year for payroll data (defaults to current year)
+          required: false
+          schema:
+            type: integer
+            example: 2024
+      responses:
+        '200':
+          description: Payroll overview retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    example: "Payroll"
+                  payroll:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Payroll'
+                  temppayroll:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TempPayroll'
+                  minYear:
+                    type: integer
+                    example: 2020
+                  year:
+                    type: integer
+                    example: 2024
+        '401':
+          description: Unauthorized - User not authenticated
+        '403':
+          description: Forbidden - User doesn't have permission
+
+  /payroll/{year}-{month}:
+    get:
+      tags:
+        - Payroll Management
+      summary: Get payroll details for specific month
+      description: Retrieve detailed payroll information for a specific month and year
+      parameters:
+        - name: year
+          in: path
+          required: true
+          description: Year for payroll data
+          schema:
+            type: integer
+            example: 2024
+        - name: month
+          in: path
+          required: true
+          description: Month for payroll data (1-12)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+            example: 12
+      responses:
+        '200':
+          description: Payroll details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    example: "Payroll"
+                  payroll:
+                    $ref: '#/components/schemas/Payroll'
+                  month:
+                    type: integer
+                    example: 12
+                  year:
+                    type: integer
+                    example: 2024
+                  bookingbutton:
+                    type: boolean
+                    example: true
+                  advancebutton:
+                    type: boolean
+                    example: false
+        '404':
+          description: Payroll not found for specified month/year
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/define/{year}-{month}:
+    get:
+      tags:
+        - Payroll Management
+      summary: Define payroll for new month
+      description: Generate or update payroll for a new month (operations done in temp payroll table)
+      parameters:
+        - name: year
+          in: path
+          required: true
+          description: Year for payroll definition
+          schema:
+            type: integer
+            example: 2024
+        - name: month
+          in: path
+          required: true
+          description: Month for payroll definition
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+            example: 12
+      responses:
+        '200':
+          description: Payroll definition page loaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    example: "Define Payroll"
+                  year:
+                    type: integer
+                    example: 2024
+                  month:
+                    type: integer
+                    example: 12
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/define-pay:
     post:
-      summary: Commit payroll
+      tags:
+        - Payroll Management
+      summary: Define pay structure
+      description: Define pay structure for payroll processing
       requestBody:
         required: true
         content:
@@ -15,8 +186,1105 @@ paths:
               properties:
                 year:
                   type: integer
+                  description: Year for pay definition
+                  example: 2024
                 month:
                   type: integer
+                  description: Month for pay definition
+                  example: 12
+                pay_structure:
+                  type: object
+                  description: Pay structure configuration
       responses:
         '200':
-          description: Payroll committed
+          description: Pay structure defined successfully
+        '400':
+          description: Invalid pay structure data
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/edit/{id}:
+    get:
+      tags:
+        - Payroll Management
+      summary: Edit payroll
+      description: Load payroll edit form
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Payroll ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Payroll edit form loaded successfully
+        '404':
+          description: Payroll not found
+        '401':
+          description: Unauthorized - User not authenticated
+
+    post:
+      tags:
+        - Payroll Management
+      summary: Update payroll
+      description: Update existing payroll information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Payroll ID
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayrollUpdate'
+      responses:
+        '200':
+          description: Payroll updated successfully
+        '400':
+          description: Invalid payroll data
+        '404':
+          description: Payroll not found
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/delete/{id}:
+    delete:
+      tags:
+        - Payroll Management
+      summary: Delete payroll
+      description: Delete a payroll record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Payroll ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Payroll deleted successfully
+        '404':
+          description: Payroll not found
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/add-pr:
+    post:
+      tags:
+        - Payroll Management
+      summary: Add payroll record
+      description: Add a new payroll record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayrollCreate'
+      responses:
+        '200':
+          description: Payroll record added successfully
+        '400':
+          description: Invalid payroll data
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/edit-pr/{id}:
+    get:
+      tags:
+        - Payroll Management
+      summary: Edit payroll record
+      description: Load payroll record edit form
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Payroll record ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Payroll record edit form loaded successfully
+        '404':
+          description: Payroll record not found
+        '401':
+          description: Unauthorized - User not authenticated
+
+    post:
+      tags:
+        - Payroll Management
+      summary: Update payroll record
+      description: Update existing payroll record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Payroll record ID
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayrollRecordUpdate'
+      responses:
+        '200':
+          description: Payroll record updated successfully
+        '400':
+          description: Invalid payroll record data
+        '404':
+          description: Payroll record not found
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/delete-pr/{id}:
+    delete:
+      tags:
+        - Payroll Management
+      summary: Delete payroll record
+      description: Delete a payroll record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Payroll record ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Payroll record deleted successfully
+        '404':
+          description: Payroll record not found
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/slab-type:
+    get:
+      tags:
+        - Pay Structure
+      summary: Get slab types
+      description: Retrieve available slab types for pay structure
+      responses:
+        '200':
+          description: Slab types retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SlabType'
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/submit:
+    post:
+      tags:
+        - Payroll Management
+      summary: Submit payroll
+      description: Submit payroll for processing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                year:
+                  type: integer
+                  description: Year for payroll submission
+                  example: 2024
+                month:
+                  type: integer
+                  description: Month for payroll submission
+                  example: 12
+                payroll_data:
+                  type: object
+                  description: Payroll data to submit
+      responses:
+        '200':
+          description: Payroll submitted successfully
+        '400':
+          description: Invalid payroll data
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/pepf:
+    get:
+      tags:
+        - PEPF
+      summary: Get PEPF overview
+      description: Retrieve Public Enterprise Provident Fund overview
+      responses:
+        '200':
+          description: PEPF overview retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PEPFOverview'
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/generate-pepf:
+    post:
+      tags:
+        - PEPF
+      summary: Generate PEPF
+      description: Generate PEPF calculations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                year:
+                  type: integer
+                  description: Year for PEPF generation
+                  example: 2024
+                month:
+                  type: integer
+                  description: Month for PEPF generation
+                  example: 12
+      responses:
+        '200':
+          description: PEPF generated successfully
+        '400':
+          description: Invalid PEPF data
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/submit-pepf:
+    post:
+      tags:
+        - PEPF
+      summary: Submit PEPF
+      description: Submit PEPF for processing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                year:
+                  type: integer
+                  description: Year for PEPF submission
+                  example: 2024
+                month:
+                  type: integer
+                  description: Month for PEPF submission
+                  example: 12
+                pepf_data:
+                  type: object
+                  description: PEPF data to submit
+      responses:
+        '200':
+          description: PEPF submitted successfully
+        '400':
+          description: Invalid PEPF data
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/view-pepf/{year}-{month}:
+    get:
+      tags:
+        - PEPF
+      summary: View PEPF details
+      description: View detailed PEPF information for specific month/year
+      parameters:
+        - name: year
+          in: path
+          required: true
+          description: Year for PEPF data
+          schema:
+            type: integer
+            example: 2024
+        - name: month
+          in: path
+          required: true
+          description: Month for PEPF data
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+            example: 12
+      responses:
+        '200':
+          description: PEPF details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PEPFDetails'
+        '404':
+          description: PEPF data not found
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/book-salary:
+    post:
+      tags:
+        - Salary Booking
+      summary: Book salary
+      description: Book salary for employees
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                year:
+                  type: integer
+                  description: Year for salary booking
+                  example: 2024
+                month:
+                  type: integer
+                  description: Month for salary booking
+                  example: 12
+                salary_data:
+                  type: object
+                  description: Salary booking data
+      responses:
+        '200':
+          description: Salary booked successfully
+        '400':
+          description: Invalid salary data
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/commit:
+    post:
+      tags:
+        - Payroll Management
+      summary: Commit payroll
+      description: Commit payroll for final processing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                year:
+                  type: integer
+                  description: Year for payroll commit
+                  example: 2024
+                month:
+                  type: integer
+                  description: Month for payroll commit
+                  example: 12
+      responses:
+        '200':
+          description: Payroll committed successfully
+        '400':
+          description: Invalid payroll data
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/book-advance-salary:
+    post:
+      tags:
+        - Salary Booking
+      summary: Book advance salary
+      description: Book advance salary for employees
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                year:
+                  type: integer
+                  description: Year for advance salary booking
+                  example: 2024
+                month:
+                  type: integer
+                  description: Month for advance salary booking
+                  example: 12
+                advance_salary_data:
+                  type: object
+                  description: Advance salary booking data
+      responses:
+        '200':
+          description: Advance salary booked successfully
+        '400':
+          description: Invalid advance salary data
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/pay-structure:
+    get:
+      tags:
+        - Pay Structure
+      summary: Get pay structure
+      description: Retrieve pay structure information
+      responses:
+        '200':
+          description: Pay structure retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayStructure'
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/employee:
+    get:
+      tags:
+        - Employee Payroll
+      summary: Get employee payroll data
+      description: Retrieve employee-specific payroll information
+      parameters:
+        - name: employee_id
+          in: query
+          description: Employee ID
+          required: false
+          schema:
+            type: integer
+            example: 123
+      responses:
+        '200':
+          description: Employee payroll data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeePayroll'
+        '404':
+          description: Employee not found
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/pbvi:
+    get:
+      tags:
+        - PBVI
+      summary: Get PBVI overview
+      description: Retrieve Payroll Bank Voucher Issue overview
+      responses:
+        '200':
+          description: PBVI overview retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PBVIOverview'
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/generate-pbvi:
+    post:
+      tags:
+        - PBVI
+      summary: Generate PBVI
+      description: Generate Payroll Bank Voucher Issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                year:
+                  type: integer
+                  description: Year for PBVI generation
+                  example: 2024
+                month:
+                  type: integer
+                  description: Month for PBVI generation
+                  example: 12
+      responses:
+        '200':
+          description: PBVI generated successfully
+        '400':
+          description: Invalid PBVI data
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/view-pbvi/{year}-{month}:
+    get:
+      tags:
+        - PBVI
+      summary: View PBVI details
+      description: View detailed PBVI information for specific month/year
+      parameters:
+        - name: year
+          in: path
+          required: true
+          description: Year for PBVI data
+          schema:
+            type: integer
+            example: 2024
+        - name: month
+          in: path
+          required: true
+          description: Month for PBVI data
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+            example: 12
+      responses:
+        '200':
+          description: PBVI details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PBVIDetails'
+        '404':
+          description: PBVI data not found
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/edit-pbvi/{id}:
+    get:
+      tags:
+        - PBVI
+      summary: Edit PBVI
+      description: Load PBVI edit form
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: PBVI ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: PBVI edit form loaded successfully
+        '404':
+          description: PBVI not found
+        '401':
+          description: Unauthorized - User not authenticated
+
+    post:
+      tags:
+        - PBVI
+      summary: Update PBVI
+      description: Update existing PBVI information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: PBVI ID
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PBVIUpdate'
+      responses:
+        '200':
+          description: PBVI updated successfully
+        '400':
+          description: Invalid PBVI data
+        '404':
+          description: PBVI not found
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/submit-pbvi:
+    post:
+      tags:
+        - PBVI
+      summary: Submit PBVI
+      description: Submit PBVI for processing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                year:
+                  type: integer
+                  description: Year for PBVI submission
+                  example: 2024
+                month:
+                  type: integer
+                  description: Month for PBVI submission
+                  example: 12
+                pbvi_data:
+                  type: object
+                  description: PBVI data to submit
+      responses:
+        '200':
+          description: PBVI submitted successfully
+        '400':
+          description: Invalid PBVI data
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/basic/{employee_id}:
+    get:
+      tags:
+        - Employee Payroll
+      summary: Get employee basic salary
+      description: Retrieve basic salary information for a specific employee
+      parameters:
+        - name: employee_id
+          in: path
+          required: true
+          description: Employee ID
+          schema:
+            type: integer
+            example: 123
+      responses:
+        '200':
+          description: Employee basic salary retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicSalary'
+        '404':
+          description: Employee not found
+        '401':
+          description: Unauthorized - User not authenticated
+
+  /payroll/tds:
+    get:
+      tags:
+        - Employee Payroll
+      summary: Get TDS information
+      description: Retrieve Tax Deducted at Source information
+      parameters:
+        - name: employee_id
+          in: query
+          description: Employee ID
+          required: false
+          schema:
+            type: integer
+            example: 123
+        - name: year
+          in: query
+          description: Financial year
+          required: false
+          schema:
+            type: integer
+            example: 2024
+      responses:
+        '200':
+          description: TDS information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TDSInfo'
+        '401':
+          description: Unauthorized - User not authenticated
+
+components:
+  schemas:
+    Payroll:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        month:
+          type: integer
+          example: 12
+        year:
+          type: integer
+          example: 2024
+        status:
+          type: string
+          enum: [draft, submitted, committed]
+          example: "draft"
+        created_date:
+          type: string
+          format: date-time
+          example: "2024-12-01T00:00:00Z"
+        modified_date:
+          type: string
+          format: date-time
+          example: "2024-12-01T00:00:00Z"
+
+    TempPayroll:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        employee_id:
+          type: integer
+          example: 123
+        month:
+          type: integer
+          example: 12
+        year:
+          type: integer
+          example: 2024
+        basic_salary:
+          type: number
+          format: float
+          example: 50000.00
+        total_earnings:
+          type: number
+          format: float
+          example: 60000.00
+        total_deductions:
+          type: number
+          format: float
+          example: 5000.00
+        net_salary:
+          type: number
+          format: float
+          example: 55000.00
+
+    PayrollCreate:
+      type: object
+      required:
+        - month
+        - year
+      properties:
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+          example: 12
+        year:
+          type: integer
+          example: 2024
+        description:
+          type: string
+          example: "December 2024 Payroll"
+
+    PayrollUpdate:
+      type: object
+      properties:
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+          example: 12
+        year:
+          type: integer
+          example: 2024
+        status:
+          type: string
+          enum: [draft, submitted, committed]
+          example: "submitted"
+        description:
+          type: string
+          example: "Updated December 2024 Payroll"
+
+    PayrollRecordCreate:
+      type: object
+      required:
+        - employee_id
+        - basic_salary
+      properties:
+        employee_id:
+          type: integer
+          example: 123
+        basic_salary:
+          type: number
+          format: float
+          example: 50000.00
+        allowances:
+          type: number
+          format: float
+          example: 10000.00
+        deductions:
+          type: number
+          format: float
+          example: 5000.00
+
+    PayrollRecordUpdate:
+      type: object
+      properties:
+        basic_salary:
+          type: number
+          format: float
+          example: 50000.00
+        allowances:
+          type: number
+          format: float
+          example: 10000.00
+        deductions:
+          type: number
+          format: float
+          example: 5000.00
+
+    SlabType:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Basic Pay Slab"
+        description:
+          type: string
+          example: "Basic pay slab structure"
+        min_amount:
+          type: number
+          format: float
+          example: 0.00
+        max_amount:
+          type: number
+          format: float
+          example: 100000.00
+
+    PEPFOverview:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "PEPF Overview"
+        total_employees:
+          type: integer
+          example: 150
+        total_contribution:
+          type: number
+          format: float
+          example: 750000.00
+        employer_contribution:
+          type: number
+          format: float
+          example: 375000.00
+        employee_contribution:
+          type: number
+          format: float
+          example: 375000.00
+
+    PEPFDetails:
+      type: object
+      properties:
+        year:
+          type: integer
+          example: 2024
+        month:
+          type: integer
+          example: 12
+        employees:
+          type: array
+          items:
+            type: object
+            properties:
+              employee_id:
+                type: integer
+                example: 123
+              name:
+                type: string
+                example: "John Doe"
+              basic_salary:
+                type: number
+                format: float
+                example: 50000.00
+              employee_contribution:
+                type: number
+                format: float
+                example: 2500.00
+              employer_contribution:
+                type: number
+                format: float
+                example: 2500.00
+              total_contribution:
+                type: number
+                format: float
+                example: 5000.00
+
+    PayStructure:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Standard Pay Structure"
+        description:
+          type: string
+          example: "Standard pay structure for all employees"
+        payheads:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              name:
+                type: string
+                example: "Basic Pay"
+              type:
+                type: string
+                enum: [earning, deduction]
+                example: "earning"
+              percentage:
+                type: number
+                format: float
+                example: 50.00
+
+    EmployeePayroll:
+      type: object
+      properties:
+        employee_id:
+          type: integer
+          example: 123
+        name:
+          type: string
+          example: "John Doe"
+        department:
+          type: string
+          example: "IT"
+        designation:
+          type: string
+          example: "Software Engineer"
+        basic_salary:
+          type: number
+          format: float
+          example: 50000.00
+        total_earnings:
+          type: number
+          format: float
+          example: 60000.00
+        total_deductions:
+          type: number
+          format: float
+          example: 5000.00
+        net_salary:
+          type: number
+          format: float
+          example: 55000.00
+
+    PBVIOverview:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "PBVI Overview"
+        total_vouchers:
+          type: integer
+          example: 25
+        total_amount:
+          type: number
+          format: float
+          example: 1250000.00
+        pending_vouchers:
+          type: integer
+          example: 5
+        processed_vouchers:
+          type: integer
+          example: 20
+
+    PBVIDetails:
+      type: object
+      properties:
+        year:
+          type: integer
+          example: 2024
+        month:
+          type: integer
+          example: 12
+        vouchers:
+          type: array
+          items:
+            type: object
+            properties:
+              voucher_id:
+                type: integer
+                example: 1
+              employee_id:
+                type: integer
+                example: 123
+              employee_name:
+                type: string
+                example: "John Doe"
+              amount:
+                type: number
+                format: float
+                example: 55000.00
+              status:
+                type: string
+                enum: [pending, processed, cancelled]
+                example: "pending"
+              created_date:
+                type: string
+                format: date-time
+                example: "2024-12-01T00:00:00Z"
+
+    PBVIUpdate:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: float
+          example: 55000.00
+        status:
+          type: string
+          enum: [pending, processed, cancelled]
+          example: "processed"
+        remarks:
+          type: string
+          example: "Updated voucher amount"
+
+    BasicSalary:
+      type: object
+      properties:
+        employee_id:
+          type: integer
+          example: 123
+        basic_salary:
+          type: number
+          format: float
+          example: 50000.00
+        effective_date:
+          type: string
+          format: date
+          example: "2024-01-01"
+        pay_grade:
+          type: string
+          example: "PG-5"
+
+    TDSInfo:
+      type: object
+      properties:
+        employee_id:
+          type: integer
+          example: 123
+        financial_year:
+          type: integer
+          example: 2024
+        total_income:
+          type: number
+          format: float
+          example: 600000.00
+        taxable_income:
+          type: number
+          format: float
+          example: 500000.00
+        tds_amount:
+          type: number
+          format: float
+          example: 25000.00
+        tds_percentage:
+          type: number
+          format: float
+          example: 5.00
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for API authentication
+
+security:
+  - bearerAuth: []

@@ -1,0 +1,177 @@
+{
+  "api": {
+    "title": "HR Payroll API",
+    "version": "1.0.0",
+    "description": "Comprehensive API documentation for HR Payroll Management System",
+    "contact": {
+      "name": "HR Development Team",
+      "email": "hr@company.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.company.com",
+      "description": "Production server"
+    }
+  ],
+  "security": {
+    "type": "bearer",
+    "scheme": "JWT",
+    "description": "JWT token for API authentication"
+  },
+  "tags": [
+    {
+      "name": "Payroll Management",
+      "description": "Core payroll operations"
+    },
+    {
+      "name": "Pay Structure",
+      "description": "Pay structure and payhead management"
+    },
+    {
+      "name": "Employee Payroll",
+      "description": "Employee-specific payroll operations"
+    },
+    {
+      "name": "Salary Booking",
+      "description": "Salary booking and advance salary operations"
+    },
+    {
+      "name": "PEPF",
+      "description": "Public Enterprise Provident Fund operations"
+    },
+    {
+      "name": "PBVI",
+      "description": "Payroll Bank Voucher Issue operations"
+    }
+  ],
+  "paths": {
+    "controllers": "../../module/Hr/src/Controller/",
+    "output": "hr-payroll-api.yaml",
+    "swagger_ui": "../swagger-ui/index.html"
+  },
+  "endpoints": {
+    "payroll": {
+      "base": "/payroll",
+      "methods": [
+        "indexAction",
+        "payrollAction",
+        "definepayrollAction",
+        "definepayAction",
+        "editpayrollAction",
+        "addAction",
+        "editAction",
+        "deleteAction",
+        "addprAction",
+        "editprAction",
+        "deleteprAction",
+        "getslabtypeAction",
+        "submitpayrollAction",
+        "commitpayrollAction"
+      ]
+    },
+    "pepf": {
+      "base": "/payroll",
+      "methods": [
+        "pepfAction",
+        "generatepepfAction",
+        "submitpepfAction",
+        "viewpepfAction"
+      ]
+    },
+    "salary": {
+      "base": "/payroll",
+      "methods": [
+        "booksalaryAction",
+        "bookadvancesalaryAction"
+      ]
+    },
+    "pbvi": {
+      "base": "/payroll",
+      "methods": [
+        "pbviAction",
+        "generatepbviAction",
+        "viewpbviAction",
+        "editpbviAction",
+        "submitpbviAction"
+      ]
+    },
+    "employee": {
+      "base": "/payroll",
+      "methods": [
+        "getemployeeAction",
+        "getbasicAction",
+        "gettdsAction"
+      ]
+    }
+  },
+  "schemas": {
+    "Payroll": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "month": {
+          "type": "integer",
+          "example": 12
+        },
+        "year": {
+          "type": "integer",
+          "example": 2024
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "submitted", "committed"],
+          "example": "draft"
+        }
+      }
+    },
+    "EmployeePayroll": {
+      "type": "object",
+      "properties": {
+        "employee_id": {
+          "type": "integer",
+          "example": 123
+        },
+        "name": {
+          "type": "string",
+          "example": "John Doe"
+        },
+        "basic_salary": {
+          "type": "number",
+          "format": "float",
+          "example": 50000.00
+        },
+        "net_salary": {
+          "type": "number",
+          "format": "float",
+          "example": 55000.00
+        }
+      }
+    }
+  },
+  "ui": {
+    "theme": "default",
+    "docExpansion": "list",
+    "filter": true,
+    "showRequestHeaders": true,
+    "tryItOutEnabled": true,
+    "deepLinking": true,
+    "displayOperationId": false,
+    "defaultModelsExpandDepth": 1,
+    "defaultModelExpandDepth": 1,
+    "displayRequestDuration": true,
+    "showExtensions": true,
+    "showCommonExtensions": true
+  }
+} 
